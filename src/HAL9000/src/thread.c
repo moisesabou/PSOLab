@@ -794,6 +794,8 @@ _ThreadInit(
         pThread->State = ThreadStateBlocked;
         pThread->Priority = Priority;
 
+        LOG("Thread created. TID : %x | Name : %s\n", pThread->Id, pThread->Name);
+
         LockInit(&pThread->BlockLock);
 
         LockAcquire(&m_threadSystemData.AllThreadsLock, &oldIntrState);
@@ -1188,6 +1190,8 @@ _ThreadDestroy(
     ASSERT(NULL == Context);
 
     LockAcquire(&m_threadSystemData.AllThreadsLock, &oldState);
+
+    LOG("Thread terminated. TID : %x | Name : %s\n", pThread->Id, pThread->Name);
     RemoveEntryList(&pThread->AllList);
     LockRelease(&m_threadSystemData.AllThreadsLock, oldState);
 
