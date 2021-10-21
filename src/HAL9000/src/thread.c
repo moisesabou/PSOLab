@@ -798,6 +798,8 @@ _ThreadInit(
         pThread->State = ThreadStateBlocked;
         pThread->Priority = Priority;
 
+        pThread->ParentId = GetCurrentThread() ? GetCurrentThread()->Id : 0;
+
         LOG("Thread created. TID : %x | Name : %s\n", pThread->Id, pThread->Name);
 
         LockInit(&pThread->BlockLock);

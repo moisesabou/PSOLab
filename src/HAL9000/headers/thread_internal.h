@@ -40,6 +40,8 @@ typedef struct _THREAD
     TID                     Id;
     char*                   Name;
 
+    TID                     ParentId;
+
     // Currently the thread priority is not used for anything
     THREAD_PRIORITY         Priority;
     THREAD_STATE            State;
