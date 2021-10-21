@@ -670,7 +670,8 @@ ThreadSetPriority(
 STATUS
 ThreadExecuteForEachThreadEntry(
     IN      PFUNC_ListFunction  Function,
-    IN_OPT  PVOID               Context
+    IN_OPT  PVOID               Context,
+    IN      DWORD               Option
     )
 {
     STATUS status;
@@ -683,13 +684,26 @@ ThreadExecuteForEachThreadEntry(
 
     status = STATUS_SUCCESS;
 
-    LockAcquire(&m_threadSystemData.AllThreadsLock, &oldState);
-    status = ForEachElementExecute(&m_threadSystemData.AllThreadsList,
-                                   Function,
-                                   Context,
-                                   FALSE
-                                   );
-    LockRelease(&m_threadSystemData.AllThreadsLock, oldState );
+    if (Option)
+    {
+        LockAcquire(&m_threadSystemData.AllThreadsLock, &oldState);
+        status = ForEachElementExecute(&m_threadSystemData.AllThreadsList,
+                                       Function,
+                                       Context,
+                                       FALSE
+                                       );
+        LockRelease(&m_threadSystemData.AllThreadsLock, oldState );
+    }
+    else
+    {
+        LockAcquire(&m_threadSystemData.ReadyThreadsLock, &oldState);
+        status = ForEachElementExecute(&m_threadSystemData.ReadyThreadsList,
+                                       Function,
+                                       Context,
+                                       FALSE
+                                       );
+        LockRelease(&m_threadSystemData.ReadyThreadsLock, oldState);
+    }
 
     return status;
 }

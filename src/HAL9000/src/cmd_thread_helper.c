@@ -141,8 +141,32 @@ void
     LOG("%7s", "PTID|");
     LOG("\n");
 
-    status = ThreadExecuteForEachThreadEntry(_CmdThreadPrint, NULL );
+    status = ThreadExecuteForEachThreadEntry(_CmdThreadPrint, NULL, 1 );
     ASSERT( SUCCEEDED(status));
+}
+
+void
+(__cdecl CmdListReadyThreads)(
+    IN          QWORD       NumberOfParameters
+    )
+{
+    STATUS status;
+
+    ASSERT(NumberOfParameters == 0);
+
+    LOG("%7s", "TID|");
+    LOG("%20s", "Name|");
+    LOG("%5s", "Prio|");
+    LOG("%8s", "State|");
+    LOG("%10s", "Cmp ticks|");
+    LOG("%10s", "Prt ticks|");
+    LOG("%10s", "Ttl ticks|");
+    LOG("%10s", "Process|");
+    LOG("%7s", "PTID|");
+    LOG("\n");
+
+    status = ThreadExecuteForEachThreadEntry(_CmdThreadPrint, NULL, 0 );
+    ASSERT(SUCCEEDED(status));
 }
 
 void

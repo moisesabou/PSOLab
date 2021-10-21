@@ -251,7 +251,8 @@ ThreadTakeBlockLock(
 STATUS
 ThreadExecuteForEachThreadEntry(
     IN      PFUNC_ListFunction  Function,
-    IN_OPT  PVOID               Context
+    IN_OPT  PVOID               Context,
+    IN      DWORD               Option
     );
 
 
