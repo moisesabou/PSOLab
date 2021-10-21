@@ -32,6 +32,8 @@ typedef struct _THREAD_SYSTEM_DATA
     _Guarded_by_(AllThreadsLock)
     LIST_ENTRY          AllThreadsList;
 
+    DWORD               ThreadsCount;
+
     LOCK                ReadyThreadsLock;
 
     _Guarded_by_(ReadyThreadsLock)
@@ -145,6 +147,8 @@ ThreadSystemPreinit(
 
     InitializeListHead(&m_threadSystemData.ReadyThreadsList);
     LockInit(&m_threadSystemData.ReadyThreadsLock);
+
+    m_threadSystemData.ThreadsCount = 0;
 }
 
 STATUS
@@ -800,6 +804,7 @@ _ThreadInit(
 
         LockAcquire(&m_threadSystemData.AllThreadsLock, &oldIntrState);
         InsertTailList(&m_threadSystemData.AllThreadsList, &pThread->AllList);
+        m_threadSystemData.ThreadsCount++;
         LockRelease(&m_threadSystemData.AllThreadsLock, oldIntrState);
     }
     __finally
@@ -1193,6 +1198,7 @@ _ThreadDestroy(
 
     LOG("Thread terminated. TID : %x | Name : %s\n", pThread->Id, pThread->Name);
     RemoveEntryList(&pThread->AllList);
+    m_threadSystemData.ThreadsCount--;
     LockRelease(&m_threadSystemData.AllThreadsLock, oldState);
 
     // This must be done before removing the thread from the process list, else
@@ -1242,4 +1248,12 @@ _ThreadKernelFunction(
 
     ThreadExit(exitStatus);
     NOT_REACHED;
+}
+
+DWORD
+GetThreadsCount(
+    void
+)
+{
+    return m_threadSystemData.ThreadsCount;
 }
