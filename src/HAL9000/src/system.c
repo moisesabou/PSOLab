@@ -21,6 +21,7 @@
 #include "ex_system.h"
 #include "process_internal.h"
 #include "boot_module.h"
+#include "rtc.h"
 
 #define NO_OF_TSS_STACKS             7
 STATIC_ASSERT(NO_OF_TSS_STACKS <= NO_OF_IST);
@@ -68,6 +69,31 @@ STATUS
     UNREFERENCED_PARAMETER(Context);
 
     LOGP("Hello\n");
+    return STATUS_SUCCESS;
+}
+
+static
+STATUS
+(__cdecl _PrintTickCount)(
+    IN_OPT PVOID Context
+    )
+{
+    ASSERT(Context != NULL);
+    LOGP("Tick Count : %U\n", (QWORD)Context);
+    return STATUS_SUCCESS;
+}
+
+static
+STATUS
+(__cdecl _ReturnTickCount)(
+    IN_OPT PVOID Context
+    )
+{
+    ASSERT(Context != NULL);
+    QWORD tickCount = RtcGetTickCount();
+    LOGP("Real Tick Count for this CPU : %U\n", tickCount);
+    ((QWORD*)Context)[CpuGetApicId()] = tickCount;
+
     return STATUS_SUCCESS;
 }
 
@@ -325,12 +351,46 @@ SystemInit(
 
     LOGL("Network stack successfully initialized\n");
 
-    status = SmpSendGenericIpi(_HelloIpi, NULL, NULL, NULL, FALSE);
+    //For part1 a,b,c
+    //status = SmpSendGenericIpi(_HelloIpi, NULL, NULL, NULL, FALSE);
+
+    //For part1 d
+    //SMP_DESTINATION dest = { 0 };
+    //status = SmpSendGenericIpiEx(_HelloIpi, NULL, NULL, NULL, FALSE, SmpIpiSendToAllIncludingSelf, dest);
+
+    //For part1 e
+    //SMP_DESTINATION dest = { 0 };
+    //dest.Cpu.ApicId = (BYTE)SmpGetNumberOfActiveCpus() - 1;
+    //status = SmpSendGenericIpiEx(_HelloIpi, NULL, NULL, NULL, FALSE, SmpIpiSendToCpu, dest);
+    
+    //For part1 f
+    //SMP_DESTINATION dest = { 0 };
+    //dest.Group.Affinity = 0b10101010;
+    //status = SmpSendGenericIpiEx(_HelloIpi, NULL, NULL, NULL, FALSE, SmpIpiSendToGroup, dest);
+
+    //For part2 a
+    //QWORD tickCount = RtcGetTickCount();
+    //LOGP("RealTickCount : %U\n", tickCount);
+    //status = SmpSendGenericIpi(_PrintTickCount, (PVOID)tickCount, NULL, NULL, FALSE);
+
+    //For part2 b
+    DWORD cpuCount = SmpGetNumberOfActiveCpus();
+    QWORD* tickCounts = ExAllocatePoolWithTag(PoolAllocateZeroMemory, sizeof(QWORD) * cpuCount, HEAP_DISK_TAG, 0);
+    status = SmpSendGenericIpi(_ReturnTickCount, (PVOID)tickCounts, NULL, NULL, TRUE);
     if (!SUCCEEDED(status))
     {
         LOG_FUNC_ERROR("SmpSendGenericIpi", status);
         return status;
     }
+    else
+    {
+        for (DWORD i = 0; i < cpuCount; ++i)
+        {
+            LOGP("For CPU(%d) tickCount : %U\n", i, tickCounts[i]);
+        }
+    }
+
+    ExFreePoolWithTag(tickCounts, HEAP_DISK_TAG);
 
     return status;
 }
