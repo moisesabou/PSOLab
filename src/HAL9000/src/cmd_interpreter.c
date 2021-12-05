@@ -75,7 +75,7 @@ static const COMMAND_DEFINITION COMMANDS[] =
 
     { "processes", "Displays all processes", CmdListProcesses, 0, 0},
     { "procstat", "0x$PID - displays information about a process", CmdProcessDump, 1, 1},
-    { "procstart", "$PATH_TO_EXE - starts a process", CmdStartProcess, 1, 9},
+    { "procstart", "$PATH_TO_EXE - starts a process", CmdStartProcess, 1, 1},
     { "proctest", "$TEST_NAME - runs a process test", CmdTestProcess, 1, 1},
 
     { "sysinfo", "Retrieves system information", CmdDisplaySysInfo, 0, 0},
