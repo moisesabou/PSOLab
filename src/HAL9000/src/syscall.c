@@ -8,6 +8,8 @@
 #include "process_internal.h"
 #include "dmp_cpu.h"
 
+#include "thread.h"
+
 extern void SyscallEntry();
 
 #define SYSCALL_IF_VERSION_KM       SYSCALL_IMPLEMENTED_IF_VERSION
@@ -66,6 +68,18 @@ SyscallHandler(
         {
         case SyscallIdIdentifyVersion:
             status = SyscallValidateInterface((SYSCALL_IF_VERSION)*pSyscallParameters);
+            break;
+        case SyscallIdFileWrite:
+            status = SyscallFileWrite((UM_HANDLE)pSyscallParameters[0],
+                                      (PVOID)pSyscallParameters[1],
+                                      (QWORD)pSyscallParameters[2],
+                                      (QWORD*)pSyscallParameters[3]);
+            break;
+        case SyscallIdProcessExit:
+            status = SyscallProcessExit((STATUS)pSyscallParameters[0]);
+            break;
+        case SyscallIdThreadExit:
+            status = SyscallThreadExit((STATUS)pSyscallParameters[0]);
             break;
         // STUDENT TODO: implement the rest of the syscalls
         default:
@@ -170,3 +184,44 @@ SyscallValidateInterface(
 }
 
 // STUDENT TODO: implement the rest of the syscalls
+
+STATUS
+SyscallFileWrite(
+    IN  UM_HANDLE                   FileHandle,
+    IN_READS_BYTES(BytesToWrite)
+        PVOID                       Buffer,
+    IN  QWORD                       BytesToWrite,
+    OUT QWORD*                      BytesWritten
+)
+{
+    if (FileHandle == UM_FILE_HANDLE_STDOUT)
+    {
+        LOG("[%s]:[%s]\n", ProcessGetName(NULL), Buffer);
+
+        *BytesWritten = BytesToWrite;
+        return STATUS_SUCCESS;
+    }
+    else
+    {
+        return STATUS_NOT_IMPLEMENTED;
+    }
+}
+
+STATUS
+SyscallProcessExit(
+    IN      STATUS                  ExitStatus
+)
+{
+    UNREFERENCED_PARAMETER(ExitStatus);
+    ProcessTerminate(NULL);
+    return STATUS_SUCCESS;
+}
+
+STATUS
+SyscallThreadExit(
+    IN      STATUS                  ExitStatus
+)
+{
+    ThreadExit(ExitStatus);
+    return STATUS_SUCCESS;
+}
